@@ -1,26 +1,86 @@
 @import "tailwindcss";
 
+/*
+  Handoff design system — refined, editorial-utilitarian.
+  Warm paper, ink text, a single deep-teal accent. Light-first (finance tools
+  read as calm and legible). Per-org branding overrides --brand on the client
+  workspace only; the staff app uses Handoff's own identity.
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f7f5f0; /* warm off-white page */
+  --surface: #fffdf9; /* cards, raised */
+  --surface-2: #f0ede4; /* subtle fills */
+  --ink: #1c1a17; /* near-black, warm */
+  --muted: #6b6459; /* secondary text */
+  --faint: #9a9285; /* tertiary text */
+  --line: #e3ded2; /* hairlines */
+  --line-strong: #d3ccbc;
+
+  --brand: #0d5c4f; /* deep teal — ledgers, trust */
+  --brand-ink: #0a463c; /* pressed/darker */
+  --brand-tint: #e4efe9; /* soft brand fill */
+  --brand-contrast: #ffffff;
+
+  --danger: #a23a2e;
+  --warn: #9a6a12;
+  --ok: #2f6b3f;
+
+  --radius: 0.625rem;
+  --shadow-sm: 0 1px 2px rgba(28, 26, 23, 0.05), 0 1px 3px rgba(28, 26, 23, 0.04);
+  --shadow-md: 0 4px 12px rgba(28, 26, 23, 0.06), 0 2px 4px rgba(28, 26, 23, 0.04);
+  --shadow-lg: 0 12px 32px rgba(28, 26, 23, 0.1), 0 4px 8px rgba(28, 26, 23, 0.05);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-tint: var(--brand-tint);
+  --color-brand-contrast: var(--brand-contrast);
+  --color-danger: var(--danger);
+  --color-warn: var(--warn);
+  --color-ok: var(--ok);
+
+  --font-sans: var(--font-sans-var), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-var), Georgia, serif;
+  --font-mono: var(--font-mono-var), ui-monospace, monospace;
+
+  --radius-DEFAULT: var(--radius);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--line);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle paper grain for atmosphere — cheap, inline SVG noise. */
+.bg-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+}
+
+/* Focus ring in brand */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
 }

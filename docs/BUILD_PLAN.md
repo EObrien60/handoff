@@ -14,8 +14,9 @@ Autonomous build log. Updated as work proceeds so progress is visible at a glanc
 - [x] **0. Auth E2E** — DONE. gate on :4000, handoff on :3001, shared Postgres on
   :5544, `handoff` client seeded. Verified in a real browser: `/dashboard` →
   gate login → back to handoff authenticated (see `handoff-auth-e2e.png`).
-- [ ] **1. Member onboarding** — first gate login with no Member creates an
-  Organisation + owner Member linked to the gate `sub`.
+- [x] **1. Member onboarding** — DONE + verified in browser. First gate login
+  with no Member shows an onboarding form → creates Organisation (14-day trial)
+  + owner Member linked to the gate `sub`. Design system + app shell built.
 - [ ] **2. Data-access layer** — tenant-scoped repos for customers, contacts,
   requests, templates, files. Every query goes through a principal.
 - [ ] **3. Customers & Contacts** — list/create/archive customers; add contacts.

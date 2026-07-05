@@ -81,3 +81,52 @@ export async function memberFromRequest(req: Request): Promise<MemberPrincipal> 
   if (!token) throw new AuthError();
   return memberFromToken(token);
 }
+
+export type GateIdentity = { sub: string; email: string };
+
+/**
+ * Verify a token and return the gate identity (sub + authoritative email),
+ * regardless of whether a Member exists yet. Used by onboarding, which runs
+ * *before* there is a Member. Email comes from gate's /userinfo so we never
+ * trust a client-supplied email for identity.
+ */
+export async function gateIdentityFromToken(token: string): Promise<GateIdentity> {
+  let sub: string;
+  try {
+    const claims = await getVerifier().verify(token);
+    if (!claims.sub) throw new AuthError();
+    sub = String(claims.sub);
+  } catch {
+    throw new AuthError("Invalid or expired token");
+  }
+
+  const issuer = process.env.GATE_ISSUER!;
+  const res = await fetch(`${issuer.replace(/\/$/, "")}/userinfo`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new AuthError("Could not fetch gate userinfo");
+  const info = (await res.json()) as { sub: string; email: string };
+  return { sub, email: info.email };
+}
+
+export type ResolveResult =
+  | { ok: true; principal: MemberPrincipal }
+  | { ok: false; reason: "unauthenticated" | "no_membership" };
+
+/**
+ * Non-throwing resolver for endpoints that must branch on membership state
+ * (e.g. decide between showing the app vs. the onboarding form).
+ */
+export async function resolveMember(req: Request): Promise<ResolveResult> {
+  const token = bearerFromRequest(req);
+  if (!token) return { ok: false, reason: "unauthenticated" };
+  try {
+    const principal = await memberFromToken(token);
+    return { ok: true, principal };
+  } catch (err) {
+    if (err instanceof AuthError && err.message === "No membership for this account") {
+      return { ok: false, reason: "no_membership" };
+    }
+    return { ok: false, reason: "unauthenticated" };
+  }
+}

@@ -3,25 +3,31 @@
 import type { ReactNode } from "react";
 import { RequireAuth } from "@gate/web-sdk";
 import { Providers } from "../providers";
+import { Spinner } from "@/components/ui";
+import { MemberProvider } from "./_components/member-provider";
+import { AppShell } from "./_components/app-shell";
 
 /**
- * Layout for the staff-facing app. Everything under (app) requires a gate
- * session; unauthenticated visitors are redirected to the gate login page.
+ * Staff app layout. Composition:
+ *   GateProvider  → gate SSO session (processes the OAuth callback)
+ *   RequireAuth   → redirect to gate login if unauthenticated
+ *   MemberProvider→ resolve the Member, or show onboarding
+ *   AppShell      → sidebar chrome (only once a Member exists)
  */
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <Providers>
-      <RequireAuth fallback={<CenteredMessage>Signing you in…</CenteredMessage>}>
-        {children}
+      <RequireAuth
+        fallback={
+          <div className="flex min-h-full flex-1 items-center justify-center">
+            <Spinner />
+          </div>
+        }
+      >
+        <MemberProvider>
+          <AppShell>{children}</AppShell>
+        </MemberProvider>
       </RequireAuth>
     </Providers>
-  );
-}
-
-function CenteredMessage({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex min-h-full flex-1 items-center justify-center p-8 text-sm text-neutral-500">
-      {children}
-    </div>
   );
 }
