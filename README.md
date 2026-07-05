@@ -84,7 +84,8 @@ adversarially, never left to app-level trust.
 - **Tailwind CSS 4**
 - **Postgres** + **Drizzle ORM** (single database, shared schema, mandatory tenant scoping)
 - Object storage for files (signed, expiring, tenant/customer-scoped URLs)
-- Magic-link auth (both sides) — tokens stored hashed
+- **Auth:** staff (Members) via [`gate`](../gate) SSO (OAuth2 + PKCE); clients
+  (Contacts) via tenant-scoped magic links. See [`docs/AUTH.md`](docs/AUTH.md).
 - **Stripe** for firm subscriptions (payments *through* the portal is a later phase)
 
 Deliberately boring and proven. The cleverness budget is spent on the Request UX and
@@ -95,16 +96,23 @@ tenant isolation, not the plumbing.
 ```
 handoff/
 ├── src/
-│   ├── app/              # Next.js App Router
-│   │   └── (marketing)/  # public landing (the 30-second pitch)
+│   ├── app/
+│   │   ├── (app)/        # staff app — gated behind gate SSO
+│   │   │   ├── layout.tsx        # GateProvider + RequireAuth
+│   │   │   └── dashboard/        # requests inbox (WIP)
+│   │   ├── api/me/       # reference: verify gate token → Member
+│   │   └── providers.tsx # client GateProvider wrapper
 │   ├── db/
 │   │   ├── schema.ts     # the domain model (source of truth)
 │   │   └── index.ts      # Drizzle client
-│   └── lib/              # auth, tenancy, email, storage helpers
-├── drizzle/              # generated migrations
+│   └── lib/
+│       ├── gate.ts       # server-side gate token verify → MemberPrincipal
+│       ├── principal.ts  # tenant-scope assertions (NFR #1)
+│       └── tokens.ts     # contact magic-link primitives
 ├── docs/
 │   ├── SPEC.md           # full product specification
-│   └── ROADMAP.md        # MVP scope + what's deliberately excluded
+│   ├── ROADMAP.md        # MVP scope + what's deliberately excluded
+│   └── AUTH.md           # gate SSO + magic-link architecture
 └── drizzle.config.ts
 ```
 

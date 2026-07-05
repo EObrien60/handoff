@@ -53,12 +53,18 @@ export const organisations = pgTable("organisations", {
 export const members = pgTable("members", {
   id: id(),
   organisationId: text("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
+  // Staff authenticate via the gate SSO server; this links a Member to their
+  // gate identity (the `sub` claim). Contacts do NOT use gate — see authTokens.
+  gateUserId: text("gate_user_id").notNull(),
   email: text("email").notNull(),
   name: text("name"),
   role: memberRole("role").notNull().default("member"),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: createdAt(),
-}, (t) => [uniqueIndex("member_org_email_idx").on(t.organisationId, t.email)]);
+}, (t) => [
+  uniqueIndex("member_org_email_idx").on(t.organisationId, t.email),
+  uniqueIndex("member_gate_user_idx").on(t.gateUserId),
+]);
 
 /* ---------- Customer (the client) ---------- */
 
@@ -153,14 +159,15 @@ export const files = pgTable("files", {
   createdAt: createdAt(),
 }, (t) => [index("file_customer_idx").on(t.customerId)]);
 
-/* ---------- Auth tokens (magic links, both sides) ---------- */
+/* ---------- Contact magic-link tokens ---------- */
 
+// Staff (Members) authenticate through gate SSO. Contacts (clients) do NOT:
+// they get a frictionless, tenant-scoped magic link with no gate account.
+// This table backs only the contact side.
 export const authTokens = pgTable("auth_tokens", {
   id: id(),
   tokenHash: text("token_hash").notNull(), // store the hash, never the raw token
-  // exactly one of memberId / contactId is set
-  memberId: text("member_id").references(() => members.id, { onDelete: "cascade" }),
-  contactId: text("contact_id").references(() => contacts.id, { onDelete: "cascade" }),
+  contactId: text("contact_id").notNull().references(() => contacts.id, { onDelete: "cascade" }),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   consumedAt: timestamp("consumed_at", { withTimezone: true }),
   createdAt: createdAt(),

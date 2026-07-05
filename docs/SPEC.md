@@ -66,8 +66,13 @@ Tiered: subdomain + logo + accent + no "powered-by" (MVP) → custom domain + wh
 email with proper SPF/DKIM (Phase 2). Invariant: a client never encounters *our* brand on
 a paid plan.
 
+## Authentication
+Two populations, two mechanisms (see [`AUTH.md`](AUTH.md)):
+- **Members (staff)** authenticate via the **gate** SSO server (OAuth2 + PKCE, JWT).
+- **Contacts (clients)** use tenant-scoped, single-use magic links (no account).
+
 ## Functional requirements (MVP)
-Multi-tenant orgs; magic-link auth (both sides); Customer/Contact management; Requests with
+Multi-tenant orgs; gate SSO for staff + magic-link for clients; Customer/Contact management; Requests with
 upload/question/approval items; request lifecycle + reminders; templates; per-Customer
 shared Files; branded client workspace + emails; subdomain per org; email + in-app
 notifications; Stripe subscription billing; audit trail on request events.

@@ -14,6 +14,8 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@gate/verify": "file:../../gate/packages/verify",
+    "@gate/web-sdk": "file:../../gate/packages/web-sdk",
     "drizzle-orm": "^0.45.2",
     "nanoid": "^5.1.16",
     "next": "16.2.10",
