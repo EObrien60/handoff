@@ -33,10 +33,11 @@ Autonomous build log. Updated as work proceeds so progress is visible at a glanc
   tenant-scoped keys, contact upload + org-checked staff download (verified).
 - [~] **7. Notifications** — email on send DONE (dev transport → .mail/).
   In-app + "submitted" notification to firm still to do.
-- [~] **8. Branding** — client portal is white-labelled per-org accent + name
-  (verified). Settings UI to edit logo/accent still to do.
+- [x] **8. Branding** — DONE. Client portal white-labelled per-org (accent +
+  name + logo). Owner-only settings UI edits name/accent/logo (/api/org).
 - [ ] **9. Billing** — Stripe subscription model (dev-stubbed provider).
-- [ ] **10. Landing page** — the 30-second pitch.
+- [x] **10. Landing page** — DONE. Public 30-second pitch (hero, "daily tax",
+  3 steps, pricing) → CTA into gate login. Verified rendering in-browser.
 - [ ] **11. Dashboarding SDK** — `@handoff/sdk`: gate-authed React dashboard
   primitives + typed API client, so other apps can embed a handoff dashboard.
 
