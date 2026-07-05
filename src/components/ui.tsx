@@ -102,6 +102,64 @@ export function Badge({ tone = "neutral", children }: { tone?: Tone; children: R
   );
 }
 
+/* ---------- Modal ---------- */
+
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/30 p-4 pt-[10vh] backdrop-blur-sm">
+      <div
+        role="button"
+        tabIndex={-1}
+        aria-label="Close"
+        className="fixed inset-0"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-lg rounded-[calc(var(--radius)+4px)] border border-line bg-surface shadow-lg">
+        <div className="flex items-center justify-between border-b border-line px-6 py-4">
+          <h2 className="font-display text-lg tracking-tight text-ink">{title}</h2>
+          <button onClick={onClose} className="text-faint hover:text-ink" aria-label="Close">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8}>
+              <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div className="p-6">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- EmptyState ---------- */
+
+export function EmptyState({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center px-8 py-20 text-center">
+      <p className="font-display text-xl text-ink">{title}</p>
+      {description && <p className="mt-2 max-w-sm text-sm text-muted">{description}</p>}
+      {action && <div className="mt-6">{action}</div>}
+    </div>
+  );
+}
+
 /* ---------- Spinner ---------- */
 
 export function Spinner({ className }: { className?: string }) {

@@ -17,11 +17,14 @@ Autonomous build log. Updated as work proceeds so progress is visible at a glanc
 - [x] **1. Member onboarding** — DONE + verified in browser. First gate login
   with no Member shows an onboarding form → creates Organisation (14-day trial)
   + owner Member linked to the gate `sub`. Design system + app shell built.
-- [ ] **2. Data-access layer** — tenant-scoped repos for customers, contacts,
-  requests, templates, files. Every query goes through a principal.
-- [ ] **3. Customers & Contacts** — list/create/archive customers; add contacts.
-- [ ] **4. Requests** — builder (upload/question/approval items), templates,
-  lifecycle, the requests-by-status dashboard inbox.
+- [x] **2. Data-access layer** — DONE. Tenant-scoped repos (customers, requests,
+  templates) + withMember route wrapper + zod validation. All queries scoped by
+  organisationId at the repo boundary.
+- [x] **3. Customers & Contacts** — DONE + verified. List/create clients, client
+  detail, add contacts.
+- [x] **4. Requests** — DONE + verified. Builder (upload/question/approval),
+  templates, lifecycle (draft→sent), requests-by-status inbox, request detail
+  with send/cancel. Created & sent a real request in-browser.
 - [ ] **5. Client magic-link flow** — issue link, contact completion view,
   file upload, submission → firm sees it complete.
 - [ ] **6. Files & storage** — dev disk storage behind signed URLs; S3 later.

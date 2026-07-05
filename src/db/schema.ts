@@ -188,6 +188,16 @@ export const customerRelations = relations(customers, ({ one, many }) => ({
   files: many(files),
 }));
 
+export const contactRelations = relations(contacts, ({ one }) => ({
+  organisation: one(organisations, { fields: [contacts.organisationId], references: [organisations.id] }),
+  customer: one(customers, { fields: [contacts.customerId], references: [customers.id] }),
+}));
+
+export const fileRelations = relations(files, ({ one }) => ({
+  customer: one(customers, { fields: [files.customerId], references: [customers.id] }),
+  requestItem: one(requestItems, { fields: [files.requestItemId], references: [requestItems.id] }),
+}));
+
 export const requestRelations = relations(requests, ({ one, many }) => ({
   customer: one(customers, { fields: [requests.customerId], references: [customers.id] }),
   items: many(requestItems),
