@@ -1,36 +1,135 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Handoff
 
-## Getting Started
+**The client workspace that kills the email chase.**
 
-First, run the development server:
+> Stop chasing clients for documents. One link, everything you need, in your brand.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Handoff is an opinionated, self-serve B2B SaaS: a beautiful client workspace that
+replaces the email / Dropbox / attachment chaos between a service business and its
+clients. It is **not** a CRM, an ERP, a form builder, or a "build anything" platform.
+It does one thing exceptionally well and refuses to do the other fifty.
+
+---
+
+## The wedge
+
+Every service business eventually drowns in the same emails:
+
+> *"Can you send me the bank statement?" · "Did you get my receipts?" · "Can you approve this?" · "Any update?"*
+
+Email is the worst possible tool for **getting the right things from a client, on time,
+with sign-off** — and that is the one job Handoff does. A business creates a **Request**
+(a checklist of things to upload, questions to answer, and documents to approve), sends
+one link, and the client completes it from their phone with no password and no app.
+
+Value is delivered in under 10 minutes and does not depend on branding, a custom domain,
+or a long relationship to prove itself.
+
+## Who it's for (launch beachhead)
+
+Bookkeeping, accounting, and fractional-finance firms (1–20 staff, 10–150 recurring
+clients). The relationship is **inherently monthly**, so retention is built into the
+business model rather than bolted on. The architecture is vertical-agnostic — the
+domain model ports to agencies, law firms, and consultants; only the default templates
+and marketing bend.
+
+## What makes it different
+
+- **Opinionated, not configurable.** No drag-and-drop, no page builder, no workflow
+  engine. You answer a few questions; the workspace is excellent by default.
+- **Beautiful by default.** The client should think *"this is where I deal with this
+  company,"* never *"I'm using portal software."*
+- **Frictionless for the client.** Magic-link access, no password, mobile-perfect. The
+  bar is: easier than replying to an email.
+- **10× simpler and cheaper** than horizontal incumbents (Copilot, SuiteDash, TaxDome).
+
+---
+
+## Core concepts
+
+Five user-facing concepts. That's the whole product.
+
+| Concept | What it is |
+| --- | --- |
+| **Organisation** | The tenant — a firm. Owns branding, subdomain, subscription, staff. |
+| **Member** | A staff user at the firm. Roles: `owner` (adds billing) and `member`. |
+| **Customer** | A client the firm serves (a company or individual). |
+| **Contact** | A person who logs into a Customer's workspace via magic link. |
+| **Request** | The unit of work: a checklist of `upload` / `question` / `approval` items. |
+
+Supporting: **Request Templates** (reusable skeletons — "Monthly close"), **Files**
+(shared documents the firm gives outward), and **Notifications** (email + in-app, plumbing).
+
+### Request lifecycle
+
+```
+draft → sent → in_progress → submitted → completed
+                                   └──────────────→ cancelled
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+A Request is `completed` when every Item is resolved.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### The non-negotiable invariant
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Everything is scoped by `organisationId`. Contact-facing queries are **additionally**
+scoped by `customerId`. A contact can only ever see their own Customer's data. A
+cross-tenant leak is company-ending — it is enforced in the query layer and tested
+adversarially, never left to app-level trust.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Tech stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Tailwind CSS 4**
+- **Postgres** + **Drizzle ORM** (single database, shared schema, mandatory tenant scoping)
+- Object storage for files (signed, expiring, tenant/customer-scoped URLs)
+- Magic-link auth (both sides) — tokens stored hashed
+- **Stripe** for firm subscriptions (payments *through* the portal is a later phase)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Deliberately boring and proven. The cleverness budget is spent on the Request UX and
+tenant isolation, not the plumbing.
 
-## Deploy on Vercel
+## Project structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+handoff/
+├── src/
+│   ├── app/              # Next.js App Router
+│   │   └── (marketing)/  # public landing (the 30-second pitch)
+│   ├── db/
+│   │   ├── schema.ts     # the domain model (source of truth)
+│   │   └── index.ts      # Drizzle client
+│   └── lib/              # auth, tenancy, email, storage helpers
+├── drizzle/              # generated migrations
+├── docs/
+│   ├── SPEC.md           # full product specification
+│   └── ROADMAP.md        # MVP scope + what's deliberately excluded
+└── drizzle.config.ts
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Getting started
+
+```bash
+pnpm install
+cp .env.example .env.local          # set DATABASE_URL
+pnpm db:push                        # push schema to Postgres
+pnpm dev                            # http://localhost:3000
+```
+
+## Roadmap (short version)
+
+- **MVP (~4 weeks):** auth, Org/Customer/Contact, Requests + items + templates, branded
+  client workspace, subdomain, email notifications, Stripe subscriptions.
+- **Phase 2:** custom domains, white-label email, **Payments** (Stripe Connect), Projects.
+- **Phase 3:** e-signature, scheduling integration, SSO, API/webhooks, second vertical.
+
+See [`docs/SPEC.md`](docs/SPEC.md) and [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full picture.
+
+## Deliberately excluded (and staying that way)
+
+Website/page/form builders · workflow engine · generic database · CRM/pipeline ·
+accounting/ERP · ticketing · internal project management · chat app · "build anything."
+
+Every one of these is how a sharp six-concept product decays into an average
+fifty-concept platform. The answer is no.
