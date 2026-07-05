@@ -1,8 +1,9 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { requests, requestItems, files } from "@/db/schema";
+import { requests, requestItems, files, members, customers } from "@/db/schema";
 import { NotFoundError } from "@/lib/route";
 import { fileKey, storage } from "@/lib/storage";
+import { mailer } from "@/lib/mail";
 import type { ContactSession } from "@/lib/contact-session";
 
 /**
@@ -120,9 +121,35 @@ export async function uploadToItem(
  *  - all resolved  → "submitted" (ready for the firm to review)
  */
 async function advanceRequest(requestId: string) {
+  const [current] = await db.select().from(requests).where(eq(requests.id, requestId));
+  if (!current) return;
+
   const items = await db.query.requestItems.findMany({ where: eq(requestItems.requestId, requestId) });
   const allDone = items.length > 0 && items.every((i) => i.status === "completed");
   const anyDone = items.some((i) => i.status !== "pending");
   const next = allDone ? "submitted" : anyDone ? "in_progress" : "sent";
+
   await db.update(requests).set({ status: next, updatedAt: new Date() }).where(eq(requests.id, requestId));
+
+  // Notify the firm when a client finishes everything (transition into submitted).
+  if (next === "submitted" && current.status !== "submitted") {
+    await notifyFirmSubmitted(current.organisationId, current.customerId, current.title);
+  }
+}
+
+async function notifyFirmSubmitted(organisationId: string, customerId: string, title: string) {
+  const [staff, customer] = await Promise.all([
+    db.query.members.findMany({ where: eq(members.organisationId, organisationId) }),
+    db.query.customers.findFirst({ where: eq(customers.id, customerId) }),
+  ]);
+  const who = customer?.name ?? "A client";
+  await Promise.all(
+    staff.map((m) =>
+      mailer().send({
+        to: m.email,
+        subject: `${who} completed "${title}"`,
+        text: `${who} has finished everything you asked for in "${title}". It's ready for you to review in Handoff.`,
+      }),
+    ),
+  );
 }

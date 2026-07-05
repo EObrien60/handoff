@@ -62,10 +62,38 @@ export default function SettingsPage() {
     <>
       <PageHeader title="Settings" description="Your workspace and how clients see you." />
       <div className="max-w-xl space-y-6 p-8">
-        {data?.status === "trialing" && data.trialEndsAt && (
-          <Card className="border-brand/30 bg-brand-tint/40 p-4 text-sm text-brand-ink">
-            You&rsquo;re on a free trial until {new Date(data.trialEndsAt).toLocaleDateString()}.
+        {data?.status === "trialing" && (
+          <Card className="border-brand/30 bg-brand-tint/40 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-brand-ink">
+                You&rsquo;re on a free trial
+                {data.trialEndsAt ? ` until ${new Date(data.trialEndsAt).toLocaleDateString()}` : ""}.
+              </p>
+              {canEdit && (
+                <Button
+                  size="sm"
+                  disabled={busy}
+                  onClick={async () => {
+                    setBusy(true);
+                    try {
+                      const { url } = await api<{ url: string }>("/api/billing/checkout", {
+                        method: "POST",
+                        json: { plan: "firm" },
+                      });
+                      window.location.href = url;
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  Upgrade
+                </Button>
+              )}
+            </div>
           </Card>
+        )}
+        {data?.status === "active" && (
+          <Card className="border-ok/30 bg-[#e6f0e8]/50 p-4 text-sm text-ok">Your subscription is active. Thank you!</Card>
         )}
 
         <Card className="p-6">

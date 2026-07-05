@@ -31,11 +31,14 @@ Autonomous build log. Updated as work proceeds so progress is visible at a glanc
   firm marks complete. Full round-trip driven in-browser.
 - [x] **6. Files & storage** — DONE. Pluggable Storage (local disk in dev),
   tenant-scoped keys, contact upload + org-checked staff download (verified).
-- [~] **7. Notifications** — email on send DONE (dev transport → .mail/).
-  In-app + "submitted" notification to firm still to do.
+- [x] **7. Notifications** — DONE (email both directions). Client emailed a
+  magic link on send; firm emailed when a client completes a request
+  (submitted transition). Dev transport → .mail/ + console. In-app bell: future.
 - [x] **8. Branding** — DONE. Client portal white-labelled per-org (accent +
   name + logo). Owner-only settings UI edits name/accent/logo (/api/org).
-- [ ] **9. Billing** — Stripe subscription model (dev-stubbed provider).
+- [x] **9. Billing** — DONE + verified. Pluggable Billing provider; dev stub
+  gives a working self-serve upgrade (trial → active), verified in-browser.
+  Real Stripe Checkout + webhook slots into the same seam when keys are set.
 - [x] **10. Landing page** — DONE. Public 30-second pitch (hero, "daily tax",
   3 steps, pricing) → CTA into gate login. Verified rendering in-browser.
 - [x] **11. Dashboarding SDK** — DONE + verified. `@handoff/sdk` (packages/sdk):
@@ -46,3 +49,11 @@ Autonomous build log. Updated as work proceeds so progress is visible at a glanc
 
 ## Status notes
 - (start) Foundation + gate SSO wiring committed. Beginning Phase 0.
+- ✅ ALL 11 PHASES COMPLETE. The full loop is built and verified end to end in a
+  real browser: staff sign in via gate → onboard → add client + contact → build
+  and send a request → client opens a magic link → uploads/answers/approves in a
+  branded portal → firm is notified, reviews the file, marks complete. Plus a
+  landing page, per-org branding, self-serve billing (dev stub), and a
+  dashboarding SDK (`@handoff/sdk`) dogfooded at /sdk-demo.
+- Remaining polish (not blocking): real Stripe keys, in-app notification bell,
+  custom domains + white-label email (Phase 2 roadmap), S3 storage impl.
