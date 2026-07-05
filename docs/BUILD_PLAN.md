@@ -1,0 +1,35 @@
+# Build Plan & Progress Log
+
+Autonomous build log. Updated as work proceeds so progress is visible at a glance.
+
+## Local stack (dev ports)
+- gate Postgres: `localhost:5432` (gate's own docker-compose)
+- gate server: `localhost:4000` (`:3000` is taken by another project)
+- handoff Postgres: `localhost:5433` (handoff docker-compose)
+- handoff Next dev: `localhost:3001`
+- Mail (dev): magic links + emails written to `.mail/` and logged to console
+
+## Phases
+
+- [x] **0. Auth E2E** — DONE. gate on :4000, handoff on :3001, shared Postgres on
+  :5544, `handoff` client seeded. Verified in a real browser: `/dashboard` →
+  gate login → back to handoff authenticated (see `handoff-auth-e2e.png`).
+- [ ] **1. Member onboarding** — first gate login with no Member creates an
+  Organisation + owner Member linked to the gate `sub`.
+- [ ] **2. Data-access layer** — tenant-scoped repos for customers, contacts,
+  requests, templates, files. Every query goes through a principal.
+- [ ] **3. Customers & Contacts** — list/create/archive customers; add contacts.
+- [ ] **4. Requests** — builder (upload/question/approval items), templates,
+  lifecycle, the requests-by-status dashboard inbox.
+- [ ] **5. Client magic-link flow** — issue link, contact completion view,
+  file upload, submission → firm sees it complete.
+- [ ] **6. Files & storage** — dev disk storage behind signed URLs; S3 later.
+- [ ] **7. Notifications** — email (dev transport) + in-app on key events.
+- [ ] **8. Branding** — logo + accent applied to the client workspace + emails.
+- [ ] **9. Billing** — Stripe subscription model (dev-stubbed provider).
+- [ ] **10. Landing page** — the 30-second pitch.
+- [ ] **11. Dashboarding SDK** — `@handoff/sdk`: gate-authed React dashboard
+  primitives + typed API client, so other apps can embed a handoff dashboard.
+
+## Status notes
+- (start) Foundation + gate SSO wiring committed. Beginning Phase 0.
