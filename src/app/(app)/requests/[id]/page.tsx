@@ -3,10 +3,10 @@
 import { use, useState } from "react";
 import { PageHeader } from "../../_components/app-shell";
 import { Badge, Button, Card, Spinner } from "@/components/ui";
-import { useApi } from "@/lib/api";
+import { useApi, useDownload } from "@/lib/api";
 import { useResource } from "@/lib/use-resource";
 import { statusMeta, itemTypeMeta } from "@/lib/request-status";
-import type { RequestDetail } from "@/lib/types";
+import type { RequestDetail, RequestItem } from "@/lib/types";
 
 export default function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -22,7 +22,7 @@ export default function RequestDetailPage({ params }: { params: Promise<{ id: st
   const meta = statusMeta[request.status];
   const done = request.items.filter((i) => i.status === "completed").length;
 
-  async function act(action: "send" | "cancel") {
+  async function act(action: "send" | "cancel" | "complete") {
     setBusy(true);
     try {
       await api(`/api/requests/${id}`, { method: "PATCH", json: { action } });
@@ -42,6 +42,10 @@ export default function RequestDetailPage({ params }: { params: Promise<{ id: st
             <Button onClick={() => act("send")} disabled={busy}>
               {busy ? <Spinner className="border-t-white" /> : "Send to client"}
             </Button>
+          ) : request.status === "submitted" ? (
+            <Button onClick={() => act("complete")} disabled={busy}>
+              {busy ? <Spinner className="border-t-white" /> : "Mark complete"}
+            </Button>
           ) : (
             <Badge tone={meta.tone}>{meta.label}</Badge>
           )
@@ -50,10 +54,11 @@ export default function RequestDetailPage({ params }: { params: Promise<{ id: st
 
       <div className="mx-auto w-full max-w-2xl space-y-6 p-8">
         <div className="flex items-center justify-between text-sm text-muted">
-          <span>
+          <span className="flex items-center gap-2">
+            <Badge tone={meta.tone}>{meta.label}</Badge>
             {done}/{request.items.length} completed
           </span>
-          {request.status !== "draft" && request.status !== "cancelled" && (
+          {request.status !== "draft" && request.status !== "cancelled" && request.status !== "completed" && (
             <button onClick={() => act("cancel")} className="text-danger hover:underline" disabled={busy}>
               Cancel request
             </button>
@@ -62,16 +67,7 @@ export default function RequestDetailPage({ params }: { params: Promise<{ id: st
 
         <Card className="divide-y divide-line">
           {request.items.map((item) => (
-            <div key={item.id} className="flex items-start gap-3 px-5 py-4">
-              <StatusDot done={item.status === "completed"} />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-ink">{item.label}</p>
-                <p className="mt-0.5 text-xs text-faint">{itemTypeMeta[item.type].label}</p>
-                {item.status === "completed" && item.response != null && (
-                  <ItemResponse type={item.type} response={item.response} />
-                )}
-              </div>
-            </div>
+            <ItemRow key={item.id} item={item} />
           ))}
         </Card>
 
@@ -85,30 +81,55 @@ export default function RequestDetailPage({ params }: { params: Promise<{ id: st
   );
 }
 
-function StatusDot({ done }: { done: boolean }) {
-  return (
-    <span
-      className={
-        done
-          ? "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ok text-white"
-          : "mt-0.5 h-5 w-5 shrink-0 rounded-full border-2 border-line-strong"
-      }
-    >
-      {done && (
-        <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={3}>
-          <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )}
-    </span>
-  );
-}
+function ItemRow({ item }: { item: RequestItem }) {
+  const download = useDownload();
+  const complete = item.status === "completed";
 
-function ItemResponse({ type, response }: { type: string; response: Record<string, unknown> }) {
-  if (type === "question" && typeof response.answer === "string") {
-    return <p className="mt-1 rounded-md bg-surface-2 px-3 py-2 text-sm text-ink">{response.answer}</p>;
-  }
-  if (type === "approval" && typeof response.decision === "string") {
-    return <p className="mt-1 text-xs font-medium text-ok">{response.decision === "approved" ? "Approved" : "Changes requested"}</p>;
-  }
-  return null;
+  return (
+    <div className="flex items-start gap-3 px-5 py-4">
+      <span
+        className={
+          complete
+            ? "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ok text-white"
+            : "mt-0.5 h-5 w-5 shrink-0 rounded-full border-2 border-line-strong"
+        }
+      >
+        {complete && (
+          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={3}>
+            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-ink">{item.label}</p>
+        <p className="mt-0.5 text-xs text-faint">{itemTypeMeta[item.type].label}</p>
+
+        {item.type === "question" && typeof item.response?.answer === "string" && (
+          <p className="mt-2 rounded-md bg-surface-2 px-3 py-2 text-sm text-ink">{item.response.answer}</p>
+        )}
+        {item.type === "approval" && typeof item.response?.decision === "string" && (
+          <p className="mt-1 text-xs font-medium text-ok">
+            {item.response.decision === "approved" ? "Approved" : "Changes requested"}
+          </p>
+        )}
+        {item.type === "upload" && item.files && item.files.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {item.files.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => download(`/api/files/${f.id}`)}
+                className="flex items-center gap-2 text-sm text-brand hover:underline"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                  <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" />
+                  <path d="M14 3v5h5" />
+                </svg>
+                {f.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

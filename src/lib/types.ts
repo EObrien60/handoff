@@ -14,6 +14,8 @@ export type Customer = {
   contacts: Contact[];
 };
 
+export type UploadedFile = { id: string; name: string; contentType: string | null };
+
 export type RequestItem = {
   id: string;
   type: ItemType;
@@ -21,6 +23,7 @@ export type RequestItem = {
   position: number;
   status: ItemStatus;
   response: Record<string, unknown> | null;
+  files?: UploadedFile[];
 };
 
 export type RequestListItem = {

@@ -25,11 +25,16 @@ Autonomous build log. Updated as work proceeds so progress is visible at a glanc
 - [x] **4. Requests** — DONE + verified. Builder (upload/question/approval),
   templates, lifecycle (draft→sent), requests-by-status inbox, request detail
   with send/cancel. Created & sent a real request in-browser.
-- [ ] **5. Client magic-link flow** — issue link, contact completion view,
-  file upload, submission → firm sees it complete.
-- [ ] **6. Files & storage** — dev disk storage behind signed URLs; S3 later.
-- [ ] **7. Notifications** — email (dev transport) + in-app on key events.
-- [ ] **8. Branding** — logo + accent applied to the client workspace + emails.
+- [x] **5. Client magic-link flow** — DONE + verified end to end. Sending a
+  request emails each contact a single-use link → contact session cookie →
+  branded portal → upload/answer/approve → auto-advances to "submitted" →
+  firm marks complete. Full round-trip driven in-browser.
+- [x] **6. Files & storage** — DONE. Pluggable Storage (local disk in dev),
+  tenant-scoped keys, contact upload + org-checked staff download (verified).
+- [~] **7. Notifications** — email on send DONE (dev transport → .mail/).
+  In-app + "submitted" notification to firm still to do.
+- [~] **8. Branding** — client portal is white-labelled per-org accent + name
+  (verified). Settings UI to edit logo/accent still to do.
 - [ ] **9. Billing** — Stripe subscription model (dev-stubbed provider).
 - [ ] **10. Landing page** — the 30-second pitch.
 - [ ] **11. Dashboarding SDK** — `@handoff/sdk`: gate-authed React dashboard

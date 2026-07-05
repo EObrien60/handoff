@@ -22,6 +22,7 @@ export async function withMember(
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: "invalid_request", issues: err.issues }, { status: 400 });
     }
+    if (err instanceof BadRequestError) return NextResponse.json({ error: err.message }, { status: 400 });
     if (err instanceof NotFoundError) return NextResponse.json({ error: "not_found" }, { status: 404 });
     console.error("Unhandled route error:", err);
     return NextResponse.json({ error: "internal_error" }, { status: 500 });
@@ -32,6 +33,13 @@ export class NotFoundError extends Error {
   constructor() {
     super("not_found");
     this.name = "NotFoundError";
+  }
+}
+
+export class BadRequestError extends Error {
+  constructor(message = "invalid_request") {
+    super(message);
+    this.name = "BadRequestError";
   }
 }
 

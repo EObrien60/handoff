@@ -1,7 +1,9 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { requests, requestItems, customers } from "@/db/schema";
+import { requests, requestItems, customers, contacts, organisations } from "@/db/schema";
 import { NotFoundError } from "@/lib/route";
+import { issueContactToken } from "./contact-tokens";
+import { mailer } from "@/lib/mail";
 import type { MemberPrincipal } from "@/lib/principal";
 
 export type NewItem = { type: "upload" | "question" | "approval"; label: string };
@@ -27,7 +29,7 @@ export async function getRequest(p: MemberPrincipal, id: string) {
     where: and(eq(requests.id, id), eq(requests.organisationId, p.organisationId)),
     with: {
       customer: { with: { contacts: true } },
-      items: true,
+      items: { with: { files: true } },
     },
   });
   if (!row) throw new NotFoundError();
@@ -71,7 +73,10 @@ export async function createRequest(
   });
 }
 
-/** Move a draft request to "sent" (records sentAt). Idempotent-ish. */
+/**
+ * Move a request to "sent" and email each of the client's contacts a
+ * single-use magic link that deep-links to the request in their portal.
+ */
 export async function sendRequest(p: MemberPrincipal, id: string) {
   const [row] = await db
     .update(requests)
@@ -85,13 +90,46 @@ export async function sendRequest(p: MemberPrincipal, id: string) {
     )
     .returning();
   if (!row) throw new NotFoundError();
-  return row;
+
+  const [org, recipients] = await Promise.all([
+    db.query.organisations.findFirst({ where: eq(organisations.id, p.organisationId) }),
+    db.query.contacts.findMany({ where: eq(contacts.customerId, row.customerId) }),
+  ]);
+
+  const appUrl = (process.env.APP_URL ?? "http://localhost:3001").replace(/\/$/, "");
+  const firmName = org?.name ?? "your accountant";
+  const now = new Date();
+
+  await Promise.all(
+    recipients.map(async (contact) => {
+      const token = await issueContactToken(contact.id, now);
+      const link = `${appUrl}/c/${token}?next=${encodeURIComponent(`/portal/r/${row.id}`)}`;
+      await mailer().send({
+        to: contact.email,
+        subject: `${firmName} needs a few things from you`,
+        text: `Hi${contact.name ? ` ${contact.name}` : ""},\n\n${firmName} has sent you a request: "${row.title}".\n\nOpen it here (no password needed):\n${link}\n\nThis link expires in 15 minutes; you can always request a new one.`,
+      });
+    }),
+  );
+
+  return { ...row, sentTo: recipients.length };
 }
 
 export async function cancelRequest(p: MemberPrincipal, id: string) {
   const [row] = await db
     .update(requests)
     .set({ status: "cancelled", updatedAt: new Date() })
+    .where(and(eq(requests.id, id), eq(requests.organisationId, p.organisationId)))
+    .returning();
+  if (!row) throw new NotFoundError();
+  return row;
+}
+
+/** Firm marks a submitted request as reviewed/completed. */
+export async function completeRequest(p: MemberPrincipal, id: string) {
+  const [row] = await db
+    .update(requests)
+    .set({ status: "completed", completedAt: new Date(), updatedAt: new Date() })
     .where(and(eq(requests.id, id), eq(requests.organisationId, p.organisationId)))
     .returning();
   if (!row) throw new NotFoundError();

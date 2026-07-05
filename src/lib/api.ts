@@ -39,3 +39,23 @@ export function useApi() {
     [getAccessToken],
   );
 }
+
+/**
+ * Open an authenticated binary resource (e.g. a stored file). Anchor links
+ * can't carry the gate bearer token, so we fetch the bytes and open a blob URL.
+ */
+export function useDownload() {
+  const { getAccessToken } = useAuth();
+  return useCallback(
+    async (path: string) => {
+      const token = await getAccessToken();
+      const res = await fetch(path, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new ApiError(res.status, res.statusText);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    },
+    [getAccessToken],
+  );
+}
