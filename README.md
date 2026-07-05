@@ -109,10 +109,13 @@ handoff/
 │       ├── gate.ts       # server-side gate token verify → MemberPrincipal
 │       ├── principal.ts  # tenant-scope assertions (NFR #1)
 │       └── tokens.ts     # contact magic-link primitives
+├── packages/
+│   └── sdk/              # @handoff/sdk — dashboarding SDK for other apps
 ├── docs/
 │   ├── SPEC.md           # full product specification
 │   ├── ROADMAP.md        # MVP scope + what's deliberately excluded
-│   └── AUTH.md           # gate SSO + magic-link architecture
+│   ├── AUTH.md           # gate SSO + magic-link architecture
+│   └── BUILD_PLAN.md     # phase-by-phase build log
 └── drizzle.config.ts
 ```
 

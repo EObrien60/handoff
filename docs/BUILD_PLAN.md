@@ -38,8 +38,11 @@ Autonomous build log. Updated as work proceeds so progress is visible at a glanc
 - [ ] **9. Billing** — Stripe subscription model (dev-stubbed provider).
 - [x] **10. Landing page** — DONE. Public 30-second pitch (hero, "daily tax",
   3 steps, pricing) → CTA into gate login. Verified rendering in-browser.
-- [ ] **11. Dashboarding SDK** — `@handoff/sdk`: gate-authed React dashboard
-  primitives + typed API client, so other apps can embed a handoff dashboard.
+- [x] **11. Dashboarding SDK** — DONE + verified. `@handoff/sdk` (packages/sdk):
+  auth-agnostic typed client + self-styled React dashboard primitives
+  (DashboardShell, StatTile/StatGrid, DataTable, StatusBadge, RequestInbox) +
+  data hooks. Dogfooded at /sdk-demo — the whole view renders from the SDK
+  against the live API with the gate token. Builds to dist via tsc.
 
 ## Status notes
 - (start) Foundation + gate SSO wiring committed. Beginning Phase 0.
